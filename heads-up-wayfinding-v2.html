@@ -1,0 +1,547 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
+<title>Heads-Up Wayfinding Experience · Java House Grand Prix of Arlington · Pre-NDA</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --bg:#f3f2ee; --panel:#ffffff; --panel2:#f7f6f2; --line:#d9d6ce; --fg:#171a1f; --muted:#5f6670;
+  --asphalt:#14171c; --asphalt2:#1f242b; --asphalt-fg:#f4f4f2; --orange:#1d4ed8; --orange-soft:#dce6fc; --blue:#0f7c8c; --blue-soft:#d8eff1;
+  --ok:#2b7a4b; --ok-soft:#e0f1e6; --warn:#9a6a0b; --warn-soft:#fbeed0; --bad:#b3261e; --bad-soft:#f8e1df; --chip:#e9e7e0;
+  --mono:'JetBrains Mono',ui-monospace,Menlo,monospace; --disp:'Barlow Condensed','Arial Narrow',sans-serif;
+  --shadow:0 1px 2px rgba(20,23,28,.08),0 10px 28px rgba(20,23,28,.10);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#101317; --panel:#181c22; --panel2:#1f242b; --line:#2e353e; --fg:#eceef0; --muted:#9aa3ad;
+  --asphalt:#0b0d10; --asphalt2:#161a20; --orange:#6d9dff; --orange-soft:#15233f; --blue:#4fc3d1; --blue-soft:#0f2e33;
+  --ok:#5fc48a; --ok-soft:#163222; --warn:#e4b654; --warn-soft:#3a2c10; --bad:#f08a84; --bad-soft:#3d1b19; --chip:#272d35;
+  --shadow:0 1px 2px rgba(0,0,0,.45),0 10px 28px rgba(0,0,0,.4); color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#101317; --panel:#181c22; --panel2:#1f242b; --line:#2e353e; --fg:#eceef0; --muted:#9aa3ad;
+  --asphalt:#0b0d10; --asphalt2:#161a20; --orange:#6d9dff; --orange-soft:#15233f; --blue:#4fc3d1; --blue-soft:#0f2e33;
+  --ok:#5fc48a; --ok-soft:#163222; --warn:#e4b654; --warn-soft:#3a2c10; --bad:#f08a84; --bad-soft:#3d1b19; --chip:#272d35;
+  --shadow:0 1px 2px rgba(0,0,0,.45),0 10px 28px rgba(0,0,0,.4); color-scheme:dark }
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:'Inter',system-ui,sans-serif;font-size:15.5px;line-height:1.45}
+h1,h2,h3,h4{font-family:var(--disp);margin:0;line-height:1;font-weight:700;text-wrap:balance;letter-spacing:.01em}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px}
+.num{font-variant-numeric:tabular-nums}
+/* hero */
+.hero{background:var(--asphalt);color:var(--asphalt-fg);position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0 0 auto 0;height:10px;background:repeating-linear-gradient(90deg,#fff 0 20px,#111 20px 40px);opacity:.9}
+.hero::after{content:"";position:absolute;inset:0;background:radial-gradient(900px 320px at 90% 10%,rgba(29,78,216,.28),transparent 60%);pointer-events:none}
+.hero .wrap{position:relative;padding-block:34px 18px}
+.kicker{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#a9c6ff}
+.wordmark{display:flex;align-items:center;gap:14px;margin-top:8px}
+.wordmark .mark{width:52px;height:52px;border-radius:12px;background:var(--orange);display:grid;place-items:center;flex:0 0 auto;transform:rotate(-8deg)}
+.wordmark .mark svg{width:30px;height:30px}
+.wordmark h1{font-size:clamp(40px,6vw,68px);text-transform:uppercase}
+.hero p{max-width:72ch;color:#c7ccd3;margin:10px 0 0}
+.mockline{display:inline-block;margin-top:12px;font-size:13px;color:#c7ccd3;border:1px dashed #4b535d;border-radius:6px;padding:4px 10px}
+/* tabs */
+.tabbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--asphalt);border-bottom:4px solid var(--orange);box-shadow:0 4px 14px rgba(0,0,0,.2)}
+.tabbar .wrap{display:flex;flex-wrap:wrap;gap:4px;overflow:visible}
+.tabbtn{appearance:none;background:transparent;border:0;color:#c7ccd3;font-family:'Inter';font-size:15px;font-weight:600;padding:13px 16px 11px;cursor:pointer;border-bottom:4px solid transparent;margin-bottom:-4px;white-space:nowrap;display:flex;align-items:center;gap:8px}
+.tabbtn .n{font-family:var(--mono);font-size:11px;color:#a9c6ff;letter-spacing:.08em}
+.tabbtn .tag{font-family:var(--mono);font-size:10px;letter-spacing:.06em;border:1px solid #a9c6ff;border-radius:4px;padding:1px 6px;color:#a9c6ff}
+.tabbtn.on{color:#fff;border-bottom-color:#fff;background:rgba(255,255,255,.06)}
+.tab{display:none} .tab.on{display:block}
+section{padding-block:24px}
+.sh{display:flex;align-items:baseline;column-gap:12px;row-gap:4px;flex-wrap:wrap;margin-bottom:12px}
+.sh h3{font-size:34px;text-transform:uppercase}
+.sh .n{flex-basis:100%;font-family:var(--mono);font-size:12px;color:var(--orange);letter-spacing:.1em}
+.sh .sub{flex-basis:100%;color:var(--muted);font-size:18px;font-weight:600;line-height:1.35;margin-top:2px}
+.badge{display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;border-radius:4px;padding:3px 8px;font-weight:600}
+.badge.p1{background:var(--ok-soft);color:var(--ok);border:1px solid var(--ok)}
+.badge.p2{background:var(--chip);color:var(--muted);border:1px dashed var(--muted)}
+.badge.p3{background:var(--orange-soft);color:var(--orange);border:1px solid var(--orange)}
+.lede{max-width:80ch;color:var(--muted);margin:0 0 16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);min-width:0}
+.card .hd{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.card .hd h4{font-size:22px;text-transform:uppercase} .card .hd .cnt{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.card .bd{padding:12px 16px}
+.note{font-size:12.5px;color:var(--muted);margin-top:8px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.ghost{opacity:.55;filter:grayscale(.5);border-style:dashed!important;position:relative}
+.p2tag{position:absolute;top:10px;right:10px;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;background:var(--chip);color:var(--muted);border:1px dashed var(--muted);border-radius:4px;padding:2px 6px;z-index:2}
+/* phones */
+.phones{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:22px 18px;align-items:start}
+.pcol{min-width:0}
+.pcol .cap{font-family:var(--disp);font-size:20px;text-transform:uppercase;margin:10px 0 2px}
+.pcol .cap small{font-family:'Inter';font-size:12.5px;text-transform:none;color:var(--muted);display:block;font-weight:400;letter-spacing:0}
+.phone{width:100%;max-width:300px;aspect-ratio:300/620;margin:0 auto;background:#0d0f12;border-radius:40px;padding:12px;box-shadow:0 24px 50px rgba(0,0,0,.35),inset 0 0 0 2px #2a2f36;position:relative}
+.phone .scr{position:absolute;inset:12px;border-radius:30px;overflow:hidden;background:#fff;color:#171a1f;display:flex;flex-direction:column;font-size:13px}
+.phone .notch{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:96px;height:26px;background:#0d0f12;border-radius:14px;z-index:5}
+.sb{height:40px;flex:0 0 auto;display:flex;align-items:flex-end;justify-content:space-between;padding:0 18px 4px;font-family:var(--mono);font-size:10.5px;color:#171a1f}
+.sb.light{color:#fff}
+.appbar{display:flex;align-items:center;gap:8px;padding:8px 14px;font-family:var(--disp);font-size:16px;text-transform:uppercase;font-weight:700}
+.appbar .back{width:22px;height:22px;border-radius:6px;background:#eee;display:grid;place-items:center;font-size:12px}
+.appbar .r{margin-left:auto;font-family:var(--mono);font-size:9.5px;color:#777;text-transform:none;white-space:nowrap}
+.scr .body{flex:1;min-height:0;overflow:hidden;padding:0 14px}
+.youare{background:var(--asphalt);color:#fff;border-radius:12px;padding:12px 14px;margin-top:4px}
+.youare .k{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:#a9c6ff;text-transform:uppercase}
+.youare .z{font-family:var(--disp);font-size:24px;text-transform:uppercase;line-height:1}
+.youare .s{font-size:11px;color:#c7ccd3;margin-top:2px}
+.zl{margin-top:10px}
+.zl .k{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:#777;text-transform:uppercase;margin:8px 0 4px}
+.zrow{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid #e4e2dc;border-radius:10px;margin-bottom:6px;background:#fff}
+.zrow .ic{width:30px;height:30px;border-radius:8px;background:var(--orange-soft);color:var(--orange);display:grid;place-items:center;font-family:var(--disp);font-weight:700;font-size:14px;flex:0 0 auto}
+.zrow .t{font-weight:600;font-size:13px;line-height:1.15} .zrow .t small{display:block;font-weight:400;color:#777;font-size:11px}
+.zrow .m{margin-left:auto;font-family:var(--mono);font-size:11px;color:#444;text-align:right;line-height:1.15;white-space:nowrap;flex:0 0 auto}
+.zrow.sel{border-color:var(--orange);box-shadow:0 0 0 2px var(--orange-soft)}
+.near{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:6px}
+.near div{text-align:center;font-size:9.5px;color:#444}
+.near div b{display:block;width:34px;height:34px;margin:0 auto 3px;border-radius:50%;background:#f1efe9;display:grid;place-items:center;font-size:15px;color:#171a1f}
+.drawer{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:18px 18px 0 0;box-shadow:0 -8px 24px rgba(0,0,0,.18);padding:8px 14px 14px}
+.drawer .grab{width:40px;height:4px;border-radius:2px;background:#ccc;margin:0 auto 8px}
+.search{display:flex;align-items:center;gap:8px;border:1px solid #ddd;border-radius:10px;padding:7px 10px;font-size:12px;color:#777;background:#fafaf8}
+.search span:last-child{margin-left:auto;font-family:var(--mono);font-size:10px}
+/* AR screen */
+.ar{position:relative;flex:1;min-height:0;overflow:hidden;background:
+  linear-gradient(180deg,#8ec5f5 0%,#bfe0fb 22%,#d7d1c6 23%,#b9b0a2 36%,#6d6963 38%,#4a4845 60%,#3a3836 100%)}
+.ar .crowd{position:absolute;left:-10%;right:-10%;top:24%;height:14%;background:
+  radial-gradient(14px 20px at 8% 60%,#2d3340 60%,transparent 62%),radial-gradient(16px 22px at 20% 70%,#64403a 60%,transparent 62%),radial-gradient(14px 20px at 31% 55%,#1f4e8a 60%,transparent 62%),radial-gradient(15px 22px at 44% 72%,#c54b2b 60%,transparent 62%),radial-gradient(14px 20px at 57% 58%,#2d3340 60%,transparent 62%),radial-gradient(16px 22px at 70% 70%,#e3d8c6 60%,transparent 62%),radial-gradient(14px 20px at 83% 56%,#3b6a3c 60%,transparent 62%),radial-gradient(15px 22px at 95% 70%,#64403a 60%,transparent 62%);filter:blur(1.5px);opacity:.9}
+.ar .fence{position:absolute;left:0;right:0;top:35%;height:3px;background:repeating-linear-gradient(90deg,#e8e8e8 0 6px,transparent 6px 12px);opacity:.6}
+.ar .ground{position:absolute;left:0;right:0;top:44%;bottom:118px;display:flex;flex-direction:column-reverse;align-items:center;justify-content:flex-start;gap:10px}
+.ar .chev{width:66px;height:34px;background:var(--orange);clip-path:polygon(50% 0,100% 58%,76% 100%,50% 50%,24% 100%,0 58%);filter:drop-shadow(0 0 2px #fff) drop-shadow(0 3px 4px rgba(0,0,0,.45));animation:flow 1.6s linear infinite}
+.ar .chev:nth-child(2){width:52px;height:27px;animation-delay:-.53s;opacity:.9} .ar .chev:nth-child(3){width:40px;height:21px;animation-delay:-1.06s;opacity:.8}
+@keyframes flow{0%{transform:translateY(8px);opacity:.6}50%{opacity:1}100%{transform:translateY(-8px);opacity:.6}}
+.ar .dest{position:absolute;left:50%;top:27%;transform:translateX(-50%);background:#fff;color:#171a1f;border-radius:10px;padding:5px 9px;font-size:10.5px;font-weight:600;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.25)}
+.ar .dest::after{content:"";position:absolute;left:50%;bottom:-6px;transform:translateX(-50%) rotate(45deg);width:10px;height:10px;background:#fff}
+.ar .top{position:absolute;left:10px;right:10px;top:10px;background:rgba(13,15,18,.86);color:#fff;border-radius:12px;padding:9px 11px;display:flex;align-items:center;gap:10px;backdrop-filter:blur(4px)}
+.ar .top .z{font-family:var(--disp);font-size:18px;text-transform:uppercase;line-height:1} .ar .top .z small{display:block;font-family:'Inter';font-size:10px;color:#c7ccd3;text-transform:none;font-weight:400}
+.ar .top .m{margin-left:auto;text-align:right;font-family:var(--mono);font-size:12px;line-height:1.2} .ar .top .m small{display:block;font-size:9.5px;color:#a9c6ff}
+.ar .turn{position:absolute;left:10px;right:10px;bottom:62px;background:#fff;color:#171a1f;border-radius:12px;padding:8px 11px;display:flex;align-items:center;gap:10px;box-shadow:0 6px 18px rgba(0,0,0,.3)}
+.ar .turn .ic{width:30px;height:30px;border-radius:8px;background:var(--blue-soft);color:var(--blue);display:grid;place-items:center;font-weight:700;flex:0 0 auto}
+.ar .turn b{font-size:12.5px;display:block;line-height:1.1} .ar .turn small{font-size:10.5px;color:#555}
+.ar .acts{position:absolute;left:10px;right:10px;bottom:12px;display:flex;gap:8px}
+.ar .acts div{flex:1;background:rgba(13,15,18,.86);color:#fff;border-radius:10px;padding:8px;text-align:center;font-size:11px;font-weight:600}
+.ar .acts div.map{background:#fff;color:#171a1f}
+.ar .toast{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--warn-soft);color:#5a3d05;border:1px solid var(--warn);border-radius:8px;padding:4px 8px;font-size:10px;font-weight:600;white-space:nowrap}
+.ar .lbl{position:absolute;background:rgba(255,255,255,.92);color:#171a1f;border-radius:8px;padding:3px 7px;font-size:9.5px;font-weight:600;border:1px dashed var(--muted)}
+.ar .recenter{position:absolute;left:10px;right:10px;top:50%;transform:translateY(-50%);background:#fff;color:#171a1f;border-radius:12px;padding:12px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.ar .recenter b{display:block;font-family:var(--disp);font-size:18px;text-transform:uppercase}
+.ar .recenter small{color:#555;font-size:11px}
+.ar .recenter .bar{height:4px;border-radius:2px;background:#eee;margin-top:8px;overflow:hidden} .ar .recenter .bar i{display:block;height:100%;width:62%;background:var(--orange)}
+/* 2D map */
+.map2d{flex:1;position:relative;background:#e9efe4;overflow:hidden}
+.map2d .track{position:absolute;left:-20%;right:-20%;top:38%;height:14%;border:10px solid #3b3f46;border-radius:50%;transform:rotate(-8deg)}
+.map2d .bld{position:absolute;background:#cfd6cb;border-radius:3px}
+.map2d .route{position:absolute;left:28%;top:64%;width:44%;height:28%;border-left:4px dashed var(--blue);border-top:4px dashed var(--blue);border-radius:14px 0 0 0}
+.map2d .pin{position:absolute;width:14px;height:14px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--orange);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.map2d .me{position:absolute;width:14px;height:14px;border-radius:50%;background:var(--blue);border:3px solid #fff;box-shadow:0 0 0 6px rgba(31,95,191,.25)}
+.map2d .bridge{position:absolute;background:#fff;border:1px solid #999;border-radius:2px;font-size:8px;padding:1px 3px;font-family:var(--mono)}
+.dlg{position:absolute;left:14px;right:14px;top:50%;transform:translateY(-50%);background:#fff;color:#171a1f;border-radius:14px;padding:14px;box-shadow:0 12px 30px rgba(0,0,0,.35);z-index:4}
+.dlg b{font-family:var(--disp);font-size:20px;text-transform:uppercase;display:block;line-height:1}
+.dlg p{font-size:11.5px;color:#555;margin:6px 0 10px}
+.dlg .row{display:flex;gap:8px} .dlg .row div{flex:1;border:1px solid #ddd;border-radius:9px;padding:8px;text-align:center;font-weight:600;font-size:12px;cursor:pointer}
+.dlg .row div.on{background:var(--asphalt);color:#fff;border-color:var(--asphalt)}
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.22);z-index:3}
+.gate{border:1px solid #e4e2dc;border-radius:12px;padding:10px;margin-top:8px}
+.gate .k{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:#777;text-transform:uppercase}
+.gate .g{font-family:var(--disp);font-size:22px;text-transform:uppercase;line-height:1;margin-top:2px}
+.gate .s{font-size:11px;color:#555;margin-top:2px}
+.lots{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px} .lots span{font-size:10.5px;border:1px solid #ddd;border-radius:14px;padding:3px 8px} .lots span.on{background:var(--orange);color:#fff;border-color:var(--orange)}
+/* ladder table */
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+.tw{overflow-x:auto}
+/* console */
+.browser{background:#101317;border-radius:12px;box-shadow:0 20px 50px rgba(0,0,0,.3);overflow:hidden;border:1px solid #2a3139}
+.browser .chrome{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#1b2027;color:#9aa3ad}
+.browser .dots i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;background:#3a424c}
+.browser .url{flex:1;background:#0f1216;border-radius:6px;padding:5px 10px;font-family:var(--mono);font-size:12px;color:#c7ccd3;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.app{background:var(--bg);color:var(--fg);min-height:520px;display:grid;grid-template-columns:200px 1fr}
+.side{background:var(--asphalt);color:#c7ccd3;padding:14px 12px}
+.side .brand{font-family:var(--disp);color:#fff;font-size:20px;text-transform:uppercase;margin-bottom:12px;line-height:1}
+.side .brand small{display:block;font-family:var(--mono);font-size:9.5px;color:#a9c6ff;letter-spacing:.1em;text-transform:uppercase;margin-top:3px}
+.side a{display:block;padding:7px 9px;border-radius:7px;font-size:13px;color:#c7ccd3;text-decoration:none} .side a.on{background:rgba(255,255,255,.1);color:#fff}
+.side .sec{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:#7c8794;margin:12px 9px 4px}
+.main{padding:16px;min-width:0}
+.main h4{font-size:24px;text-transform:uppercase}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.kpi .k{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.kpi .v{font-family:var(--disp);font-size:30px;line-height:1;margin-top:4px}
+.kpi .d{font-size:11.5px;color:var(--muted);margin-top:2px}
+.kpi.ok .v{color:var(--ok)} .kpi.warn .v{color:var(--warn)}
+.pack{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.pack .v{font-family:var(--mono);font-size:13px}
+.pack .st{font-family:var(--mono);font-size:11px;padding:3px 8px;border-radius:4px;background:var(--ok-soft);color:var(--ok)}
+.btn{appearance:none;border:0;border-radius:8px;padding:9px 14px;font-weight:600;font-size:13px;cursor:pointer;background:var(--orange);color:#fff;font-family:'Inter'}
+.btn.sec{background:var(--chip);color:var(--fg)}
+.btn.sm{padding:6px 10px;font-size:12px}
+.bars{display:grid;gap:7px}
+.bar{display:grid;grid-template-columns:150px 1fr 60px;gap:10px;align-items:center;font-size:13px}
+.bar .tr{height:14px;background:var(--chip);border-radius:3px;overflow:hidden} .bar .tr i{display:block;height:100%;background:var(--blue)} .bar .tr i.o{background:var(--orange)}
+.bar .n{font-family:var(--mono);font-size:12px;text-align:right}
+.setting{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px} .setting:last-child{border-bottom:0}
+.setting input{width:70px;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--fg);font-family:var(--mono);text-align:right}
+.setting .l{flex:1} .setting .u{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.feed .fi{display:grid;grid-template-columns:auto 1fr;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px} .feed .fi:last-child{border-bottom:0}
+.feed .t{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap}
+.feed .fi.hot{background:var(--warn-soft);margin:0 -8px;padding-inline:8px;border-radius:6px}
+/* arch */
+.arch{display:grid;gap:10px}
+.band{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--panel);position:relative}
+.band .k{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.band.mac{border-color:var(--orange);background:linear-gradient(0deg,var(--orange-soft),var(--panel) 70%)}
+.band.mac .k{color:var(--orange)}
+.nodes{display:flex;flex-wrap:wrap;gap:8px}
+.node{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--panel2);min-width:0;flex:1 1 150px;font-size:13px}
+.node b{display:block;font-size:13.5px} .node small{color:var(--muted);font-size:11.5px;display:block;margin-top:2px}
+.node.hi{border-color:var(--blue);background:var(--blue-soft)}
+.node.g{opacity:.55;border-style:dashed}
+.arrow{text-align:center;color:var(--muted);font-size:20px;line-height:1;margin:-4px 0}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.step{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--panel)}
+.step .n{font-family:var(--disp);font-size:28px;color:var(--orange);line-height:1}
+.step b{display:block;margin-top:4px} .step p{margin:4px 0 0;font-size:13px;color:var(--muted)}
+.tl{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.tl div{border-top:4px solid var(--blue);padding-top:8px;font-size:13px} .tl div b{display:block;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.06em}
+.tl div.race{border-top-color:var(--orange)}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.rule{border-left:4px solid var(--orange);padding:6px 12px;background:var(--panel);border-radius:0 8px 8px 0;font-size:14px}
+.rule b{display:block;font-family:var(--disp);font-size:18px;text-transform:uppercase}
+/* roadmap */
+.road{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.ph{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:14px;position:relative}
+.ph h4{font-size:24px;text-transform:uppercase} .ph .when{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.06em;margin:2px 0 8px}
+.ph ul{margin:0;padding-left:18px;font-size:14px} .ph li{margin:4px 0}
+.ph.now{border-color:var(--ok);box-shadow:0 0 0 3px var(--ok-soft)}
+.rdx{display:inline-block;height:.82em;max-width:100%;background:var(--fg);opacity:.82;border-radius:2px;vertical-align:-1px}
+.nda{border:1px dashed var(--line);background:var(--panel2);border-radius:8px;padding:10px 14px;margin:0 0 16px;font-size:13.5px;color:var(--muted)}
+.nda b{color:var(--fg)}
+footer{color:var(--muted);font-size:12.5px;padding-block:28px}
+@media (max-width:720px){.app{grid-template-columns:1fr}.side{display:flex;flex-wrap:wrap;gap:4px}.side .sec,.side .brand{width:100%}.bar{grid-template-columns:110px 1fr 50px}}
+</style>
+
+<div class="hero"><div class="wrap">
+  <div class="kicker">Prepared for the Java House Grand Prix of Arlington · The Bubble, with Macedon · March 19–21, 2027</div>
+  <div class="wordmark">
+    <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 10l7-7 7 7"/><path d="M5 16l7-7 7 7" opacity=".55"/></svg></div>
+    <h1>Heads-Up Wayfinding Experience</h1>
+  </div>
+  <p>A module inside the race app. Event attendees scan a zone poster, pick where they're going, and follow an arrow on the ground. Works with no signal. Never routes through a paid area. Always one tap from the 2D map.</p>
+  <div class="mockline" style="display:block;max-width:760px;line-height:1.5;border-style:solid"><b style="color:#fff">Concept mockup for discussion.</b> All screens, numbers, places, and layouts are illustrative design references, not live product or real data. Final designs are developed with your team after signature.</div>
+  <div class="mockline">Phase 1 is what event attendees get in March 2027 · anything dashed and grey is Phase 2 (2028)</div>
+  <div class="mockline">Confidential · © 2026 The Bubble · shared solely to evaluate this proposal</div>
+</div></div>
+
+<div class="tabbar"><div class="wrap">
+  <button class="tabbtn on" data-tab="fan"><span class="n">01</span>Event attendee <span class="tag">MVP</span></button>
+  <button class="tabbtn" data-tab="race"><span class="n">02</span>Race-week console <span class="tag">MVP</span></button>
+  <button class="tabbtn" data-tab="how"><span class="n">03</span>How it works</button>
+  <button class="tabbtn" data-tab="road"><span class="n">04</span>Roadmap</button>
+</div></div>
+
+<!-- ============ 01 FAN ============ -->
+<div class="tab on" id="tab-fan"><div class="wrap">
+<section>
+  <div class="sh"><span class="n">01 · EVENT ATTENDEE</span><h3>Scan, pick, walk</h3><span class="sub">Five event attendee journeys, in the race app's own style</span></div>
+  <p class="lede">Five screens an event attendee actually sees. No login, no name, nothing typed. The poster tells the phone where the event attendee is standing. Everything after that works offline from a map pack downloaded before race day.</p>
+  <div class="phones">
+
+    <!-- A: scan -->
+    <div class="pcol"><div class="phone"><div class="notch"></div><div class="scr">
+      <div class="sb"><span>9:41</span><span>▲▲ · · &nbsp;⌁ off &nbsp;▮▮▮</span></div>
+      <div class="appbar"><span class="back">‹</span>Find your way</div>
+      <div class="body">
+        <div class="youare"><div class="k">You're at</div><div class="z">The Horseshoe</div><div class="s">Poster H-04 · North entrance · heading set</div></div>
+        <div class="zl"><div class="k">Nearby</div>
+          <div class="zrow sel"><div class="ic">W</div><div class="t">West Fan Zone<small>Java House stage · 14 places</small></div><div class="m">6 min<br>450 m</div></div>
+          <div class="zrow"><div class="ic">E</div><div class="t">East Plaza Fan Zone<small>Activations · 11 places</small></div><div class="m">9 min<br>700 m</div></div>
+          <div class="zrow"><div class="ic">N</div><div class="t">North GA<small>Grandstand · 6 places</small></div><div class="m">4 min<br>300 m</div></div>
+        </div>
+      </div>
+      <div class="drawer"><div class="grab"></div><div class="search"><span>⌕</span><span>Any place, any zone</span><span>150</span></div>
+        <div class="near"><div><b>🚻</b>Restroom</div><div><b>🍔</b>Food</div><div><b>✚</b>First aid</div><div><b>i</b>Info</div><div><b>💧</b>Water</div></div></div>
+    </div></div><div class="cap">A · Scan a poster<small>QR carries the location code. In the app it deep-links here; without the app, to the store. A deferred deep link lands new installs at the same spot.</small></div></div>
+
+    <!-- B: AR -->
+    <div class="pcol"><div class="phone"><div class="notch"></div><div class="scr">
+      <div class="sb light" style="position:absolute;left:0;right:0;top:0;z-index:3"><span>9:43</span><span>⌁ off &nbsp;▮▮▮</span></div>
+      <div class="ar">
+        <div class="crowd"></div><div class="fence"></div>
+        <div class="dest">West Fan Zone · 380 m</div>
+        <div class="ground"><div class="chev"></div><div class="chev"></div><div class="chev"></div></div>
+        <div class="top" style="top:44px"><div class="z">West Fan Zone<small>via Bridge 3 · step-free</small></div><div class="m">5 min<small>380 m left</small></div></div>
+        <div class="toast" style="top:58%">Look up. Crowds and carts ahead.</div>
+        <div class="turn"><div class="ic">↱</div><div><b>Bear right in 40 m</b><small>Keep the track wall on your left</small></div></div>
+        <div class="acts"><div>⟲ Re-center</div><div class="map">Map</div></div>
+      </div>
+    </div></div><div class="cap">B · The arrow on the ground<small>Poster anchor sets position and heading; GPS and compass correct the walk. High-contrast chevrons for sun, and the next turn always in words. If the week-3 check calls for it, compass mode keeps the same screen with an arrow that points the way and counts down the meters.</small></div></div>
+
+    <!-- C: drawer open -->
+    <div class="pcol"><div class="phone"><div class="notch"></div><div class="scr">
+      <div class="sb"><span>9:44</span><span>⌁ off &nbsp;▮▮▮</span></div>
+      <div class="appbar"><span class="back">‹</span>Where to?<span class="r">9 zones · 150 places</span></div>
+      <div class="body">
+        <div class="search" style="margin-top:4px"><span>⌕</span><span>rest</span><span>12</span></div>
+        <div class="zl"><div class="k">Nearest</div>
+          <div class="zrow sel"><div class="ic">🚻</div><div class="t">Restrooms · Horseshoe North<small>Step-free · open</small></div><div class="m">1 min<br>80 m</div></div>
+          <div class="zrow"><div class="ic">🚻</div><div class="t">Restrooms · West Fan Zone<small>Family room</small></div><div class="m">6 min<br>440 m</div></div>
+          <div class="k">Zones</div>
+          <div class="zrow"><div class="ic">H</div><div class="t">The Horseshoe<small>You are here · 18 places</small></div><div class="m">—</div></div>
+          <div class="zrow"><div class="ic">P</div><div class="t">Pit Lane Suites · WinStar Club<small>Pass required · not routed</small></div><div class="m" style="color:#999">🔒</div></div>
+          <div class="zrow"><div class="ic">S</div><div class="t">South Paddocks<small>Pass required · not routed</small></div><div class="m" style="color:#999">🔒</div></div>
+          <div class="zrow"><div class="ic">T</div><div class="t">East Turns<small>Grandstands · 9 places</small></div><div class="m">14 min<br>1.1 km</div></div>
+        </div>
+      </div>
+    </div></div><div class="cap">C · Any place, any zone<small>Journey C. Search, nearest, or browse. Pass-required areas show, but never as a route and never as a shortcut.</small></div></div>
+
+    <!-- D: step-free + exit gate -->
+    <div class="pcol"><div class="phone"><div class="notch"></div><div class="scr">
+      <div class="sb"><span>9:45</span><span>⌁ off &nbsp;▮▮▮</span></div>
+      <div class="appbar"><span class="back">‹</span>Leaving<span class="r">Journey E</span></div>
+      <div class="body">
+        <div class="k" style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:#777;text-transform:uppercase;margin-top:6px">Which lot are you parked in?</div>
+        <div class="lots"><span>Lot 4</span><span>Lot 7</span><span class="on">Lot 11</span><span>Lot 12</span><span>West Rideshare</span><span>East Rideshare</span><span>Shuttle A</span></div>
+        <div class="gate"><div class="k">Your exit</div><div class="g">Gate 2</div><div class="s">Lot 11 and West Rideshare · 12 min · step-free via street-level crossing (track cold after 5:30)</div></div>
+        <div class="gate" style="border-style:dashed;opacity:.7"><div class="k">ADA shuttle</div><div class="g" style="font-size:18px">Stop B · 3 min</div><div class="s">Long walk? The shuttle is nearby.</div></div>
+      </div>
+      <div class="dim"></div>
+      <div class="dlg" id="stepfree"><b>Routes without stairs?</b><p>Asked once, on your first direction request. Saved on this phone only. Change it anytime. Never sent anywhere.</p>
+        <div class="row"><div data-sf="yes">Yes, step-free</div><div class="on" data-sf="no">No</div></div></div>
+    </div></div><div class="cap">D · Step-free, and the right gate<small>Journey D and E. The answer lives on the phone, applies to every route, and is never in the usage data. Gates are labeled by the lots they serve.</small></div></div>
+
+    <!-- E: fallback -->
+    <div class="pcol"><div class="phone"><div class="notch"></div><div class="scr">
+      <div class="sb light" style="position:absolute;left:0;right:0;top:0;z-index:3"><span>9:52</span><span>⌁ off &nbsp;▮▮</span></div>
+      <div class="ar" style="filter:saturate(.6)">
+        <div class="crowd"></div>
+        <div class="top" style="top:44px"><div class="z">West Fan Zone<small>tracking lost</small></div><div class="m">2 min<small>160 m left</small></div></div>
+        <div class="recenter"><b>Point at the nearest poster</b><small>to re-center the arrow · W-02 is 20 m ahead on the fence</small><div class="bar"><i></i></div><small>Opening the map in 6 s</small></div>
+        <div class="turn"><div class="ic">↑</div><div><b>Straight on 160 m</b><small>Destination on your right</small></div></div>
+        <div class="acts"><div>⟲ Re-center</div><div class="map">Map now</div></div>
+      </div>
+    </div></div><div class="cap">E · Never a dead end<small>Drift, lost tracking, denied camera, no AR support, low battery: each steps down. The bottom step is the app's own 2D map with the route drawn.</small></div></div>
+
+    <!-- F: 2D map -->
+    <div class="pcol"><div class="phone"><div class="notch"></div><div class="scr">
+      <div class="sb"><span>9:52</span><span>⌁ off &nbsp;▮▮</span></div>
+      <div class="appbar"><span class="back">‹</span>Map<span class="r">existing race-app map</span></div>
+      <div class="map2d">
+        <div class="track"></div>
+        <div class="bld" style="left:8%;top:8%;width:30%;height:16%"></div><div class="bld" style="left:62%;top:6%;width:28%;height:20%"></div><div class="bld" style="left:70%;top:70%;width:22%;height:18%"></div>
+        <div class="bridge" style="left:40%;top:33%">Bridge 3</div><div class="bridge" style="left:66%;top:52%">Turn 8 ♿</div>
+        <div class="route"></div>
+        <div class="me" style="left:26%;top:89%"></div><div class="pin" style="left:70%;top:61%"></div>
+      </div>
+      <div class="drawer" style="position:static;box-shadow:none;border-top:1px solid #eee"><div class="grab"></div><div style="display:flex;justify-content:space-between;font-size:12px"><b>West Fan Zone</b><span class="num" style="font-family:var(--mono)">2 min · 160 m</span></div><div style="font-size:11px;color:#555;margin-top:2px">Route handed over from AR: start, destination, step-free.</div></div>
+    </div></div><div class="cap">F · The 2D map, with the route<small>The map already exists in the app. The module hands it the start and the destination through a small hook from your app team.</small></div></div>
+
+  </div>
+
+  <div class="grid g2" style="margin-top:22px">
+    <div class="card"><div class="hd"><h4>Fallback ladder</h4><span class="badge p1">Phase 1</span></div><div class="bd tw">
+      <table><thead><tr><th>Situation</th><th>What the event attendee sees</th></tr></thead><tbody>
+        <tr><td>Map pack not downloaded</td><td>Prompt to download; with no signal, the 2D map opens</td></tr>
+        <tr><td>Phone can't run AR, or camera denied</td><td>2D map with the route drawn</td></tr>
+        <tr><td>Opened from the app button, no poster</td><td>"Are you near West Fan Zone?" from GPS; or point at a poster</td></tr>
+        <tr><td>Arrow drifts or tracking lost</td><td>Re-center card with the next turn in words; 2D map after a few seconds</td></tr>
+        <tr><td>Walked off the route</td><td>Route recalculates on the phone</td></tr>
+        <tr><td>Low battery</td><td>Suggest the 2D map</td></tr>
+      </tbody></table>
+      <div class="note">Rules and their thresholds ship inside the map pack, so race week can tune them without an app release. Every fallback is logged with its location.</div>
+    </div></div>
+    <div class="card ghost"><span class="p2tag">Phase 2 · 2028</span><div class="hd"><h4>Discover along the way</h4></div><div class="bd">
+      <div class="ar" style="height:150px;border-radius:8px;position:relative"><div class="crowd"></div>
+        <div class="lbl" style="left:12px;top:48px">Merch · 40 m</div><div class="lbl" style="right:12px;top:70px">Java House stage · 120 m</div><div class="lbl" style="left:40%;top:96px">Water · 15 m</div>
+        <div class="lbl" style="left:12px;bottom:10px;border-color:var(--orange)">Presented by · sponsor pin</div></div>
+      <div class="note">Labels for nearby places while walking, tap to switch destination. Live rerouting when a path closes. Sponsor routes and presented-by pins. All of it rides on the Phase 1 map pack.</div>
+    </div></div>
+  </div>
+</section>
+</div></div>
+
+<!-- ============ 02 RACE-WEEK CONSOLE ============ -->
+<div class="tab" id="tab-race"><div class="wrap">
+<section>
+  <div class="sh"><span class="n">02 · CONSOLE</span><h3>Race-week console</h3><span class="sub">The map pack and the usage report, run by Macedon in AWS</span></div>
+  <p class="lede">Layout changes, new posters, and fallback thresholds go out as a small download event attendees pick up once. No app store review. In Phase 1 The Bubble and Macedon run it for you; a self-service version your team can drive is Phase 2.</p>
+  <div class="browser"><div class="chrome"><span class="dots"><i></i><i></i><i></i></span><div class="url">https://wayfinding.bethebubble.com/arlington-2027/console</div><span class="badge p1">Phase 1</span></div>
+  <div class="app">
+    <div class="side"><div class="brand">Arlington 2027<small>Heads-Up Wayfinding Experience</small></div>
+      <a class="on">Map pack</a><a>Zones &amp; places</a><a>Paths &amp; barriers</a><a>Posters</a><a>Fallback rules</a>
+      <div class="sec">Report</div><a>Usage</a><a>Fallbacks by location</a><a>Post-race report</a>
+      <div class="sec">Phase 2</div><a style="opacity:.5">Self-service editor</a><a style="opacity:.5">Live dashboard</a><a style="opacity:.5">Sponsors</a>
+    </div>
+    <div class="main">
+      <h4>Map pack · Arlington 2027</h4>
+      <div class="pack" style="margin-top:10px"><span class="v">v2027.6 · published Wed Mar 17, 4:12 pm</span><span class="st">LIVE</span><span class="v" style="color:var(--muted)">9 zones · 148 places · 312 path segments · 61 posters · 1.9 MB</span>
+        <span style="margin-left:auto;display:flex;gap:8px"><button class="btn sec sm">Preview v2027.7 draft</button><button class="btn sm" id="pub">Publish layout update</button></span></div>
+      <div class="kpis">
+        <div class="kpi"><div class="k">Phones with the pack</div><div class="v num">12,480</div><div class="d">94% on v2027.6 · rest update on next open</div></div>
+        <div class="kpi ok"><div class="k">Scans today</div><div class="v num">3,214</div><div class="d">Fri practice · 61 posters</div></div>
+        <div class="kpi"><div class="k">Trips started</div><div class="v num">2,760</div><div class="d">median 6 min · 86% arrived</div></div>
+        <div class="kpi warn"><div class="k">Fallbacks</div><div class="v num">7.8%</div><div class="d">most near the creek crossing</div></div>
+      </div>
+      <div class="grid g2">
+        <div class="card"><div class="hd"><h4>Scans by zone</h4><span class="cnt">today</span></div><div class="bd bars">
+          <div class="bar"><span>The Horseshoe</span><div class="tr"><i style="width:92%"></i></div><span class="n">812</span></div>
+          <div class="bar"><span>West Fan Zone</span><div class="tr"><i style="width:74%"></i></div><span class="n">655</span></div>
+          <div class="bar"><span>East Plaza Fan Zone</span><div class="tr"><i style="width:58%"></i></div><span class="n">512</span></div>
+          <div class="bar"><span>North GA</span><div class="tr"><i style="width:44%"></i></div><span class="n">390</span></div>
+          <div class="bar"><span>The Speed Trap</span><div class="tr"><i style="width:36%"></i></div><span class="n">318</span></div>
+          <div class="bar"><span>East Turns</span><div class="tr"><i style="width:30%"></i></div><span class="n">265</span></div>
+          <div class="bar"><span>South Turns</span><div class="tr"><i class="o" style="width:12%"></i></div><span class="n">104</span></div>
+          <div class="note">Top destinations: restrooms, Java House stage, Gate 2, first aid, Pit Lane Suites entrance.</div>
+        </div></div>
+        <div class="card"><div class="hd"><h4>Fallbacks by location</h4><span class="cnt">add a poster here</span></div><div class="bd feed">
+          <div class="fi hot"><span class="t">41 today</span><span><b>Creek crossing, south side</b> · tracking lost on the long straight. No poster within 120 m. <button class="btn sec sm">Add poster C-03 to draft</button></span></div>
+          <div class="fi"><span class="t">18</span><span><b>Bridge 3, east ramp</b> · drift after the turn. Poster B3-E faces the sun at 4 pm.</span></div>
+          <div class="fi"><span class="t">12</span><span><b>East Plaza</b> · camera denied. 2D map opened with route.</span></div>
+          <div class="fi"><span class="t">9</span><span><b>North GA</b> · low battery suggestion accepted.</span></div>
+          <div class="fi"><span class="t">—</span><span style="color:var(--muted)">Phase 2: these become next year's poster plan automatically.</span></div>
+        </div></div>
+        <div class="card"><div class="hd"><h4>Fallback rules</h4><span class="cnt">ship with the pack</span></div><div class="bd">
+          <div class="setting"><span class="l">Seconds before the 2D map opens after tracking is lost</span><input value="8"><span class="u">s</span></div>
+          <div class="setting"><span class="l">Battery level that suggests the 2D map</span><input value="15"><span class="u">%</span></div>
+          <div class="setting"><span class="l">Walking pace vs normal (race-day crowds)</span><input value="80"><span class="u">%</span></div>
+          <div class="setting"><span class="l">Re-center prompt distance from last anchor</span><input value="150"><span class="u">m</span></div>
+          <div class="note">Changed in the draft, published as part of the next pack. No code, no release.</div>
+        </div></div>
+        <div class="card"><div class="hd"><h4>Publish log</h4><span class="cnt">race week</span></div><div class="bd feed">
+          <div class="fi" id="publog"><span class="t">Wed 4:12p</span><span>v2027.6 · final layout from event ops: Lot 11 shuttle moved, two fences added west of the Horseshoe, Pit Lane entrance relabeled.</span></div>
+          <div class="fi"><span class="t">Mon 9:30a</span><span>v2027.5 · 61 posters placed and verified on the walk; 4 moved out of direct sun.</span></div>
+          <div class="fi"><span class="t">Mar 5</span><span>v2027.4 · 2027 layout locked with event ops; 148 places matched to the existing map data.</span></div>
+          <div class="fi"><span class="t">Feb 5</span><span>v2027.1 · shipped inside the module to your app team.</span></div>
+        </div></div>
+      </div>
+    </div>
+  </div></div>
+</section>
+</div></div>
+
+<!-- ============ 03 HOW IT WORKS ============ -->
+<div class="tab" id="tab-how"><div class="wrap">
+<section>
+  <div class="sh"><span class="n">03 · HOW</span><h3>How it works</h3><span class="sub">A module in your app, map content on the phone, a hosted service</span></div>
+  <div class="nda">A high-level view. Full technical detail is shared once an NDA is signed.</div>
+  <div class="grid g2">
+    <div class="card"><div class="hd"><h4>Architecture</h4><span class="badge p1">Phase 1</span></div><div class="bd arch">
+      <div class="band"><div class="k">Event attendee's phone · the race app (Penske Entertainment)</div><div class="nodes">
+        <div class="node"><b>Race app</b><small>Schedule, tickets, 2D map. Theirs. Untouched except one hook.</small></div>
+        <div class="node hi"><b>Wayfinding module · iPhone</b><small>Guides the attendee on the camera view</small></div>
+        <div class="node hi"><b>Wayfinding module · Android</b><small>The same experience on Android phones</small></div>
+        <div class="node"><b>2D map hook</b><small>start + destination + step-free, from the module to their map</small></div>
+      </div></div>
+      <div class="arrow">↓ downloaded once · ↑ usage when a signal returns</div>
+      <div class="band"><div class="k">Map pack · one format, both phones</div><div class="nodes">
+        <div class="node"><b>Zones and places</b><small>9 zones · up to 150 places · from the existing map data</small></div>
+        <div class="node"><b>Path graph</b><small>The walkable routes across campus, paid areas off-limits</small></div>
+        <div class="node"><b>Posters</b><small>Where each poster sits on campus</small></div>
+        <div class="node"><b>Rules</b><small>When to switch to the 2D map, plus safety prompts</small></div>
+      </div></div>
+      <div class="arrow">↑ published from</div>
+      <div class="band mac"><div class="k">Map pack and usage service · built and run by Macedon in AWS</div><div class="nodes">
+        <div class="node"><b>Pack publishing</b><small>Sends layout updates to phones, no app release needed</small></div>
+        <div class="node"><b>Usage ingestion</b><small>scans, trips, fallbacks with location; no names, no accounts</small></div>
+        <div class="node"><b>Race-week console</b><small>the screens on tab 02</small></div>
+        <div class="node"><b>Post-race report</b><small>automated, for your team</small></div>
+        <div class="node g"><b>Self-service editor · live dashboard</b><small>Phase 2</small></div>
+      </div><div class="note">Dedicated AWS account for the project, included through race weekend. If your house rule is your own cloud: same build, your account, your team.</div></div>
+    </div></div>
+
+    <div class="grid" style="gap:16px">
+      <div class="card"><div class="hd"><h4>Positioning without a signal</h4></div><div class="bd steps">
+        <div class="step"><div class="n">1</div><b>Poster anchors</b><p>Each poster tells the phone where the attendee is standing.</p></div>
+        <div class="step"><div class="n">2</div><b>Between posters</b><p>The arrow stays on track as the attendee walks.</p></div>
+        <div class="step"><div class="n">3</div><b>Re-center</b><p>When needed, the module asks the attendee to scan the next poster.</p></div>
+        <div class="step"><div class="n">4</div><b>Step down</b><p>If it can't recover in a few seconds, the 2D map opens with the route already drawn.</p></div>
+        <div class="note" style="grid-column:1/-1">The design does not depend on a signal. Arrows bring event attendees within a few meters of the destination.</div>
+      </div></div>
+      <div class="card"><div class="hd"><h4>Milestones</h4></div><div class="bd tl">
+        <div><b>NOV 2</b>Kickoff. NDA, your app team and stack, site plan, place data.</div>
+        <div><b>WK 3</b>Flows approved. Technical check on the actual campus.</div>
+        <div><b>WK 6</b>Path graph and map pack. Service live in AWS.</div>
+        <div><b>DEC</b>First on-site test of the permanent areas. Draft 2027 layout in.</div>
+        <div><b>MID-JAN</b>Early build to your app team. Integration starts.</div>
+        <div><b>FEB 5</b>Final module handed off. Store review on their side.</div>
+        <div class="race"><b>MAR 15–18</b>Posters placed, final layout published, routes walked.</div>
+        <div class="race"><b>MAR 19–21</b>Race weekend. On site. Report the week after.</div>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sh" style="margin-top:26px"><span class="n">03 · RISK</span><h3>Working inside your app</h3><span class="sub">Two things we plan for together</span></div>
+  <div class="grid g3">
+    <div class="card"><div class="hd"><h4>Working with your app team</h4><span class="badge p1">Plan</span></div><div class="bd">
+      <p style="margin:0 0 8px">The module ships inside your app. Your app team integrates it, tests it, and pushes the store release, so we plan the hand-off around their schedule.</p>
+      <div class="note"><b>How we plan for it:</b> your app team named in week 1, an early build to them in mid-January, and integration support held in weeks 9–12. <b>In the proposal:</b> their cooperation and release cutoff are a condition of the February 5 date. If the schedule shifts on their side, we still deliver the module and the service, and the release date becomes theirs.</div>
+    </div></div>
+    <div class="card"><div class="hd"><h4>Race day: a campus full of phones</h4><span class="badge p1">Plan</span></div><div class="bd">
+      <p style="margin:0 0 8px">Tens of thousands of event attendees open the same app in the same hour, so the module is built not to depend on the network or add load to it.</p>
+      <div class="note"><b>How we plan for it:</b> the map pack downloads before race day from a CDN, the module runs with no connection at all, and usage data waits on the phone until a signal returns. We load-test the map service and usage collection before race week. <b>In the proposal:</b> the race app’s stability is your app team’s; we answer for the Wayfinding module and the map service.</div>
+    </div></div>
+    <div class="card"><div class="hd"><h4>Who answers for what</h4><span class="badge p1">Boundary</span></div><div class="bd tw">
+      <table><thead><tr><th>Who</th><th>What they own</th></tr></thead><tbody>
+        <tr><td>The Bubble</td><td>Product lead: event attendee experience, poster spec and scan testing, project management, running approvals, your single point of contact</td></tr>
+        <tr><td>Macedon (engineering partner)</td><td>The Wayfinding module on both leading phone operating systems, the map service in AWS, race-week support, the usage report</td></tr>
+        <tr><td>Your app team</td><td>Adding the module to the race app, store releases, app stability on race day</td></tr>
+        <tr><td>Your event operations team</td><td>Site plan, zones, barriers, ADA shuttle stops</td></tr>
+        <tr><td>Your creative team</td><td>Poster artwork and branding</td></tr>
+        <tr><td>Penske Entertainment legal and privacy</td><td>Review of camera, location, and usage data before event attendees see it</td></tr>
+      </tbody></table>
+    </div></div>
+  </div>
+
+  <div class="rules" style="margin-top:18px">
+    <div class="rule"><b>Event attendees only</b>No login, no accounts, no names. Camera and location prompts sit beside the app's own.</div>
+    <div class="rule"><b>Inside the gates</b>Routing starts and ends on campus. Gates are destinations, labeled by lot.</div>
+    <div class="rule"><b>Track-aware</b>Bridges only. Never through paid, premium, or pass-required areas.</div>
+    <div class="rule"><b>Yours to keep</b>Map, zones, places, branding, and usage data are yours.</div>
+  </div>
+</section>
+</div></div>
+
+<!-- ============ 04 ROADMAP ============ -->
+<div class="tab" id="tab-road"><div class="wrap">
+<section>
+  <div class="sh"><span class="n">04 · ROADMAP</span><h3>2027, then every year</h3><span class="sub">Phase 1 gets event attendees across the campus. Phase 2 makes it a product.</span></div>
+  <div class="road">
+    <div class="ph now"><span class="badge p1" style="position:absolute;top:12px;right:12px">Phase 1</span><h4>Arlington 2027</h4><div class="when">NOV 2 → FEB 5 HAND-OFF → RACE WEEK</div>
+      <ul><li>Poster scan and in-app entry ("Are you near…?")</li><li>Arrow on the ground, walking time, distance, next turn in words</li><li>Zones, drawer, nearest, exit gate by lot</li><li>Step-free routing, ADA shuttle stops as destinations</li><li>Deferred deep link, download reminders</li><li>Map pack offline; layout updates without a release</li><li>Usage stored offline, sent when a signal returns; post-race report</li><li>Fallback ladder to the 2D map</li><li>On-site tests in December and race week; on-call race weekend</li></ul></div>
+    <div class="ph ghost"><span class="p2tag">Phase 2 · 2028</span><h4>Premium</h4><div class="when">PRICED AFTER RACE WEEKEND</div>
+      <ul><li>Discover along the way: labels while walking, tap to switch</li><li>Live rerouting when a path closes</li><li>Self-service editor for places, paths, barriers</li><li>Live usage dashboard for your team</li><li>Full ADA shuttle trip planning: walk, ride, walk</li></ul></div>
+    <div class="ph ghost"><span class="p2tag">Phase 2 · 2028</span><h4>Sponsors</h4><div class="when">RIDES ON THE SAME MAP PACK</div>
+      <ul><li>Branded pins and presented-by routes near activations</li><li>Sponsor-branded posters</li><li>Sponsor visit reporting in the post-race report</li></ul></div>
+    <div class="ph ghost"><span class="p2tag">Phase 2 · 2028+</span><h4>Next venue</h4><div class="when">RETURNING · NEW</div>
+      <ul><li>Arlington 2028: map pack redrawn for the new layout, posters re-planned from this year's fallbacks, service kept warm</li><li>A new race or campus: same modules, new pack, new posters</li><li>Vision-assisted path drawing from the site plan PDF, so the yearly graph is a review, not a redraw</li></ul></div>
+  </div>
+  <div class="note" style="margin-top:14px">Ownership: your map, zones, places, branding, and usage data are yours. The Bubble owns the wayfinding product built for the event; your use of it is set out in the proposal. Macedon, The Bubble's engineering partner, keeps its pre-existing tools and know-how. The Bubble and Macedon may reference the project publicly, with Penske Entertainment’s agreement.</div>
+</section>
+</div></div>
+
+<footer><div class="wrap">Heads-Up Wayfinding Experience · prepared for the Java House Grand Prix of Arlington by The Bubble, with engineering partner Macedon · October 2026. Sample numbers throughout; zones from the 2027 track map draft.<br><br>© 2026 The Bubble. All rights reserved. Confidential and proprietary: shared with Penske Entertainment solely to evaluate this proposal. Not to be copied, distributed, or used to develop similar solutions without The Bubble’s written consent.</div></footer>
+
+<script>
+(function(){
+  const btns=[...document.querySelectorAll('.tabbtn')];
+  function show(id,push){
+    btns.forEach(b=>b.classList.toggle('on',b.dataset.tab===id));
+    document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.id==='tab-'+id));
+    if(push){try{history.replaceState(null,'','#'+id)}catch(e){}}
+    window.scrollTo({top:0});
+  }
+  btns.forEach(b=>b.addEventListener('click',()=>show(b.dataset.tab,true)));
+  const h=(location.hash||'').replace('#','');
+  if(['fan','race','how','road'].includes(h)) show(h,false);
+  // step-free toggle
+  document.querySelectorAll('#stepfree .row div').forEach(d=>d.addEventListener('click',()=>{
+    document.querySelectorAll('#stepfree .row div').forEach(x=>x.classList.remove('on')); d.classList.add('on');
+  }));
+  // publish demo
+  const pub=document.getElementById('pub');
+  if(pub) pub.addEventListener('click',()=>{
+    const log=document.getElementById('publog'); if(!log) return;
+    const n=document.createElement('div'); n.className='fi';
+    n.innerHTML='<span class="t">just now</span><span>v2027.7 · creek-crossing poster C-03 added; 2D-map threshold 8 s → 10 s. Event attendees pick it up on next open.</span>';
+    log.parentNode.insertBefore(n,log); pub.textContent='Published v2027.7'; pub.disabled=true; pub.style.opacity=.6;
+  });
+})();
+</script>
+</body></html>
